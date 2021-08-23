@@ -2,17 +2,9 @@ import "./styles.css";
 
 import CustomCheckBox from "./CustomCheckBox";
 import { channels, categories, prepareSubscriptionOptions } from "./data";
-import React, { useCallback, useMemo, useState } from "react";
-import { SubscriptionOption, EventCheckedEnum, Category } from "./types";
-import checkParentNextStatus from "./checkNextCategoryStatus";
-
-const resolveNextChecked = (status: EventCheckedEnum): EventCheckedEnum => {
-  if (status === EventCheckedEnum.CHECKED) {
-    return EventCheckedEnum.UNCHECKED;
-  }
-
-  return EventCheckedEnum.CHECKED;
-};
+import React, { useMemo } from "react";
+import { SubscriptionOption } from "./types";
+import useCheckboxesStatuses from "./hooks/useCheckboxesStatuses";
 
 export default function App() {
   // This could come as a prop or from a custom hook from reactQuery etc...
@@ -20,142 +12,12 @@ export default function App() {
     return prepareSubscriptionOptions();
   }, []);
 
-  // The "real table" for values (like ReactHookForm internal state):
-  const [checkboxesState, updateCheckboxesState] = useState<
-    Record<string, SubscriptionOption>
-  >({});
-
-  // onClick for Group items (categories/channels)
-  const onClickGroupOption = useCallback(
-    (option) => () => {
-      if (option.type === "channel") {
-        const optionCurrentValue = checkboxesState[option.id]?.checked || 0;
-        const checked = resolveNextChecked(optionCurrentValue);
-
-        let nextState: Record<string, SubscriptionOption> = {
-          ...checkboxesState,
-          [option.id]: {
-            ...checkboxesState[option.id],
-            checked
-          }
-        };
-
-        // Set Events:
-        nextState = subscriptionOptions.reduce((acc, value) => {
-          if (value.channel?.id.startsWith(option.id)) {
-            return {
-              ...acc,
-              [value.key]: {
-                ...acc[value.key as string],
-                checked
-              }
-            };
-          }
-
-          return acc;
-        }, nextState);
-
-        // Set categories:
-        nextState = categories.reduce((acc, category) => {
-          return {
-            ...acc,
-            [`${option.id}__${category.id}`]: {
-              key: `${option.id}__${category.id}`,
-              type: "category",
-              cagegory: { id: category.id, name: category.name },
-              checked
-            }
-          };
-        }, nextState);
-
-        return updateCheckboxesState(nextState);
-      }
-
-      // The click is in a category group...
-      const key = `${option.channel.id}__${option.id}`;
-      const optionCurrentValue = checkboxesState[key]?.checked || 0;
-      const checked = resolveNextChecked(optionCurrentValue);
-      let nextState = {
-        ...checkboxesState,
-        [key]: {
-          ...checkboxesState[key],
-          checked
-        }
-      };
-
-      nextState = nextState = subscriptionOptions.reduce((acc, value) => {
-        if (value.category?.id.startsWith(option.id)) {
-          return {
-            ...acc,
-            [value.key]: {
-              ...acc[value.key as string],
-              checked
-            }
-          };
-        }
-
-        return acc;
-      }, nextState);
-
-      updateCheckboxesState(nextState);
-    },
-    [checkboxesState, subscriptionOptions]
-  );
-
-  // onClick for events (the real values):
-  const onEventClick = useCallback(
-    (subscriptionItem: SubscriptionOption) => () => {
-      // only disambiguos TS, since it's an event:
-      if (!subscriptionItem.channel || !subscriptionItem.category) {
-        throw new Error(
-          "Event should not exists without a Category or a Channel"
-        );
-      }
-
-      const previousValue = checkboxesState[subscriptionItem.key]
-        ? checkboxesState[subscriptionItem.key].checked
-        : subscriptionItem.checked;
-      const checked = resolveNextChecked(previousValue);
-
-      // updated state for the event clicked:
-      const nextState = {
-        ...checkboxesState,
-        [subscriptionItem.key]: {
-          ...subscriptionItem,
-          checked
-        }
-      };
-
-      // Now, it needs to bubble up its category status:
-      const targetCategory: Category = categories.find(
-        (c) => c.id === subscriptionItem.category!.id
-      ) as Category;
-      const nextCategoryChecked = checkParentNextStatus(
-        targetCategory.events,
-        subscriptionItem.channel,
-        nextState
-      );
-      const categoryKey = `${subscriptionItem.channel.id}__${subscriptionItem.category.id}`;
-      nextState[categoryKey] = {
-        ...nextState[categoryKey],
-        checked: nextCategoryChecked
-      };
-
-      // Now, it needs to bubble status to the Channel:
-      const nextChannelStatus = checkParentNextStatus(
-        categories,
-        subscriptionItem.channel,
-        nextState
-      );
-      nextState[subscriptionItem.channel.id] = {
-        ...nextState[subscriptionItem.channel.id],
-        checked: nextChannelStatus
-      };
-
-      updateCheckboxesState(nextState);
-    },
-    [checkboxesState]
-  );
+  const {
+    // The "real table" for values (like ReactHookForm internal state):
+    checkboxesState,
+    onClickGroupOption,
+    onEventClick
+  } = useCheckboxesStatuses(categories, subscriptionOptions);
 
   if (subscriptionOptions.length === 0) {
     return null;
@@ -201,8 +63,8 @@ export default function App() {
                       {subscriptionOptions
                         .filter((option: SubscriptionOption) => {
                           return (
-                            option.channel.id === channel.id &&
-                            option.category.id === category.id
+                            option.channel?.id === channel.id &&
+                            option.category?.id === category.id
                           );
                         })
                         .map((option) => {
