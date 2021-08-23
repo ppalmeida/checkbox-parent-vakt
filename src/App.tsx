@@ -27,10 +27,9 @@ export default function App() {
     <div>
       <div className="checkBoxSection">
         {channels.map((channel) => (
-          <div className="verticalBox">
+          <div className="verticalBox" key={channel.id}>
             <div className="customCheckboxHolder">
               <CustomCheckBox
-                key={channel.id}
                 className="customCheckbox"
                 id={channel.id}
                 checked={checkboxesState[channel.id]?.checked}
