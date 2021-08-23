@@ -1,6 +1,6 @@
 .App {
   font-family: sans-serif;
-  text-align: center;
+  margin: auto;
 }
 
 .verticalBox {
@@ -27,4 +27,19 @@
 
 .customCheckbox {
   display: inline-block;
+}
+
+.saveSection {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.saveSection button {
+  background: #1895e9;
+  border: none;
+  padding: 16px;
+  color: white;
+  border-radius: 4px;
+  min-width: 120px;
 }

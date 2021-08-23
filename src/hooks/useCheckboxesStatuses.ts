@@ -12,7 +12,7 @@ import checkParentNextStatus from "./checkParentNextStatus";
  * This method "prepares" the data that comes from the API (like a list of Categories and Channels)
  * and convert them into an object that reflects the real Events to be choosen.
  * The object uses a combination of the "channel.id + event.id" as the "key".
- * This is necessary because the same Event must be used in all Channels available.
+ * This is necessary because the same Event must be available/reltated in all Channels.
  *
  * So, if there are two events like:
  *    { id: "a", name: "Event A" }
@@ -30,10 +30,10 @@ import checkParentNextStatus from "./checkParentNextStatus";
  *    y__b: { ... },
  * }
  *
- * The "ids" are concatened with "double underscore" (__). But only to make it easier to debug.
+ * The "ids" are concatenated with "double underscore" (__). But only to make it easier to debug.
  *
- * As you can see, there is the "channel X" connected to events "a" and "b" and the same happens to
- * "channel y"
+ * As you can see above, the "Channel X" is connected to events "a" and "b" and the same happens to
+ * "channel y".
  *
  * @param categories A list of the categories that comes from the API
  * @param channels A list of the channels that comes from the API
@@ -82,7 +82,8 @@ function prepareSubscriptionOptions(
         channel,
         key: `${channel.id}__${info.event.id}`,
         checked: 0,
-        category: info.category
+        category: info.category,
+        type: "event"
       };
       result.push(subscriptionOption);
 
@@ -120,6 +121,9 @@ export default function useCheckboxesStatuses(
     Record<string, SubscriptionOption>
   >({});
 
+  /**
+   * Click on Checkbox that represents a "group": Category OR Channel
+   */
   const onClickGroupOption = useCallback(
     (option) => () => {
       if (option.type === "channel") {
@@ -136,10 +140,14 @@ export default function useCheckboxesStatuses(
 
         // Set Events:
         nextState = subscriptionOptions.reduce((acc, value) => {
-          if (value.channel?.id.startsWith(option.id)) {
+          if (
+            value.type === "event" &&
+            value.channel?.id.startsWith(option.id)
+          ) {
             return {
               ...acc,
               [value.key]: {
+                ...(subscriptionOptions.find((e) => e.key === value.key) || {}),
                 ...acc[value.key as string],
                 checked
               }
@@ -177,15 +185,16 @@ export default function useCheckboxesStatuses(
         }
       };
 
-      nextState = nextState = subscriptionOptions.reduce((acc, value) => {
-        // If the event is in the same category / event, update its checked status:
+      nextState = subscriptionOptions.reduce((acc, value) => {
         if (
-          value.category?.id.startsWith(option.id) &&
-          value.channel?.id === option.channel.id
+          value.type === "event" &&
+          value.category?.id === option.id &&
+          value.channel?.id.startsWith(option.channel.id)
         ) {
           return {
             ...acc,
             [value.key]: {
+              ...(subscriptionOptions.find((e) => e.key === value.key) || {}),
               ...acc[value.key as string],
               checked
             }
@@ -211,7 +220,9 @@ export default function useCheckboxesStatuses(
     [checkboxesState, subscriptionOptions, categories]
   );
 
-  // onClick for events (the real values):
+  /**
+   * Click on Checkbox that represents a real EVENT
+   */
   const onEventClick = useCallback(
     (subscriptionItem: SubscriptionOption) => () => {
       // only disambiguos TS, since it's an event:
@@ -266,10 +277,24 @@ export default function useCheckboxesStatuses(
     [checkboxesState, categories]
   );
 
+  const getCurrentSubscriptions = useCallback((): SubscriptionOption[] => {
+    const subscriptions = Object.values(checkboxesState).reduce<
+      SubscriptionOption[]
+    >((acc, info) => {
+      if (info.type && info.type === "event") {
+        return [...acc, info];
+      }
+
+      return acc;
+    }, []);
+    return subscriptions;
+  }, [checkboxesState]);
+
   return {
     checkboxesState,
     onClickGroupOption,
     onEventClick,
-    subscriptionOptions
+    subscriptionOptions,
+    getCurrentSubscriptions
   };
 }

@@ -50,4 +50,5 @@ export interface SubscriptionOption {
   channel?: Channel;
   key: string;
   checked: EventCheckedEnum;
+  type: "event" | "category" | "channel";
 }
