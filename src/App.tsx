@@ -10,8 +10,8 @@ export default function App() {
   const {
     checkboxesState,
     subscriptionOptions,
-    onClickGroupOption,
-    onEventClick,
+    onClickGroup,
+    onClickEvent,
     getCurrentSubscriptions
   } = useCheckboxesStatuses(channels, categories); // `channels` and `categories` here could come as props or useQuery, etc...
 
@@ -33,7 +33,7 @@ export default function App() {
                 className="customCheckbox"
                 id={channel.id}
                 checked={checkboxesState[channel.id]?.checked}
-                onClick={onClickGroupOption({ ...channel, type: "channel" })}
+                onClick={onClickGroup({ ...channel, type: "channel" })}
               />
               <span>{channel.name} (Channel)</span>
             </div>
@@ -48,10 +48,11 @@ export default function App() {
                           className="customCheckbox"
                           id={category.id}
                           checked={checkboxesState[key]?.checked}
-                          onClick={onClickGroupOption({
+                          onClick={onClickGroup({
                             ...category,
                             type: "category",
-                            channel
+                            channel,
+                            key
                           })}
                         />
                         <span>{category.name} (Category)</span>
@@ -76,7 +77,7 @@ export default function App() {
                                   className="customCheckbox"
                                   id={option.event?.id as string}
                                   checked={checkboxesState[option.key]?.checked}
-                                  onClick={onEventClick(option)}
+                                  onClick={onClickEvent(option)}
                                 />
                                 <span>{option.event?.name} (Event)</span>
                               </div>

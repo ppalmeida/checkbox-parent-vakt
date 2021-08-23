@@ -124,7 +124,7 @@ export default function useCheckboxesStatuses(
   /**
    * Click on Checkbox that represents a "group": Category OR Channel
    */
-  const onClickGroupOption = useCallback(
+  const onClickGroup = useCallback(
     (option) => () => {
       if (option.type === "channel") {
         const optionCurrentValue = checkboxesState[option.id]?.checked || 0;
@@ -185,6 +185,7 @@ export default function useCheckboxesStatuses(
         }
       };
 
+      // se the events that belongs to the category:
       nextState = subscriptionOptions.reduce((acc, value) => {
         if (
           value.type === "event" &&
@@ -223,7 +224,7 @@ export default function useCheckboxesStatuses(
   /**
    * Click on Checkbox that represents a real EVENT
    */
-  const onEventClick = useCallback(
+  const onClickEvent = useCallback(
     (subscriptionItem: SubscriptionOption) => () => {
       // only disambiguos TS, since it's an event:
       if (!subscriptionItem.channel || !subscriptionItem.category) {
@@ -292,8 +293,8 @@ export default function useCheckboxesStatuses(
 
   return {
     checkboxesState,
-    onClickGroupOption,
-    onEventClick,
+    onClickGroup,
+    onClickEvent,
     subscriptionOptions,
     getCurrentSubscriptions
   };
