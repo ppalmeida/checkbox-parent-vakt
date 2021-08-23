@@ -45,9 +45,9 @@ export interface CategoryEvent {
 }
 
 export interface SubscriptionOption {
-  event: Event;
-  category: Pick<Category, "id" | "name">;
-  channel: Channel;
+  event?: Event;
+  category?: Pick<Category, "id" | "name">;
+  channel?: Channel;
   key: string;
   checked: EventCheckedEnum;
 }
