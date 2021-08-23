@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   SubscriptionOption,
   CategoryEvent,
@@ -40,7 +40,7 @@ import checkParentNextStatus from "./checkParentNextStatus";
  *
  * @returns Record<string, SubscriptionOption> the object with the avaialable EVENTS to be choosen/clicked in the UI
  */
-export function prepareSubscriptionOptions(
+function prepareSubscriptionOptions(
   categories: Category[],
   channels: Channel[]
 ) {
@@ -98,7 +98,7 @@ export function prepareSubscriptionOptions(
  * This method calculates the next checked status for an Event
  * @param status EventCheckedEnum
  *
- * @returns the next EventCheckedEnum value
+ * @returns EventCheckedEnum: the next status value
  */
 function resolveNextChecked(status: EventCheckedEnum): EventCheckedEnum {
   if (status === EventCheckedEnum.CHECKED) {
@@ -109,9 +109,13 @@ function resolveNextChecked(status: EventCheckedEnum): EventCheckedEnum {
 }
 
 export default function useCheckboxesStatuses(
-  categories: Category[],
-  subscriptionOptions: SubscriptionOption[]
+  channels: Channel[],
+  categories: Category[]
 ) {
+  const subscriptionOptions: SubscriptionOption[] = useMemo(() => {
+    return prepareSubscriptionOptions(categories, channels);
+  }, [channels, categories]);
+
   const [checkboxesState, updateCheckboxesState] = useState<
     Record<string, SubscriptionOption>
   >({});
@@ -265,6 +269,7 @@ export default function useCheckboxesStatuses(
   return {
     checkboxesState,
     onClickGroupOption,
-    onEventClick
+    onEventClick,
+    subscriptionOptions
   };
 }

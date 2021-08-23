@@ -1,25 +1,19 @@
 import "./styles.css";
 
+import React from "react";
 import CustomCheckBox from "./CustomCheckBox";
 import { channels, categories } from "./data";
-import React, { useMemo } from "react";
 import { SubscriptionOption } from "./types";
-import useCheckboxesStatuses, {
-  prepareSubscriptionOptions
-} from "./hooks/useCheckboxesStatuses";
+import useCheckboxesStatuses from "./hooks/useCheckboxesStatuses";
 
 export default function App() {
-  // This could come as a prop or from a custom hook from reactQuery etc...
-  const subscriptionOptions: SubscriptionOption[] = useMemo(() => {
-    return prepareSubscriptionOptions(categories, channels);
-  }, []);
-
   const {
     // The "real table" for values (like ReactHookForm internal state):
     checkboxesState,
+    subscriptionOptions,
     onClickGroupOption,
     onEventClick
-  } = useCheckboxesStatuses(categories, subscriptionOptions);
+  } = useCheckboxesStatuses(channels, categories);
 
   if (subscriptionOptions.length === 0) {
     return null;
@@ -78,11 +72,11 @@ export default function App() {
                             >
                               <CustomCheckBox
                                 className="customCheckbox"
-                                id={option.event.id}
+                                id={option.event?.id as string}
                                 checked={checkboxesState[option.key]?.checked}
                                 onClick={onEventClick(option)}
                               />
-                              <span>{option.event.name} (Event)</span>
+                              <span>{option.event?.name} (Event)</span>
                             </div>
                           );
                         })}
