@@ -29,12 +29,7 @@ export interface Profile {
 export enum EventCheckedEnum {
   UNCHECKED,
   CHECKED,
-  UNDETERMINATED
-}
-
-export interface CategoryEvent {
-  event: Event;
-  category: Category;
+  UNSOLVED
 }
 
 export interface Subscription {
@@ -42,6 +37,11 @@ export interface Subscription {
   profileId: string | null;
   event: Pick<Event, "id" | "name">;
   channel: Pick<Category, "id" | "name">;
+}
+
+export interface CategoryEvent {
+  event: Event;
+  category: Category;
 }
 
 export interface SubscriptionOption {

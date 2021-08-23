@@ -59,7 +59,7 @@ export const categories: Category[] = [
         permissionAction: "TRADE_VIEW"
       },
       {
-        id: "6233769e-cfc3-42e3-8ef1-6514d6c___v2",
+        id: "v2-6233769e-cfc3-42e3-8ef1-6514d6ce3",
         name: "Cancelled V2",
         tag: "TRADE_CANCEL",
         permissionAction: "TRADE_VIEW"

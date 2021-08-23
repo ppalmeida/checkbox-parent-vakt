@@ -4,7 +4,7 @@ import CustomCheckBox from "./CustomCheckBox";
 import { channels, categories, prepareSubscriptionOptions } from "./data";
 import React, { useCallback, useMemo, useState } from "react";
 import { SubscriptionOption, EventCheckedEnum, Category } from "./types";
-import checkNextCategoryStatus from "./checkNextCategoryStatus";
+import checkParentNextStatus from "./checkNextCategoryStatus";
 
 const resolveNextChecked = (status: EventCheckedEnum): EventCheckedEnum => {
   if (status === EventCheckedEnum.CHECKED) {
@@ -20,39 +20,43 @@ export default function App() {
     return prepareSubscriptionOptions();
   }, []);
 
-  // The "real table" for values of ReactHookForm:
-  const [mockedReactHookFormState, updateMockedReactHookFormState] = useState<
+  // The "real table" for values (like ReactHookForm internal state):
+  const [checkboxesState, updateCheckboxesState] = useState<
     Record<string, SubscriptionOption>
   >({});
 
   const onClickGroupOption = useCallback(
     (option) => () => {
-      console.log("parallel_option", option);
+      if (option.type === "channel") {
+        const checked = resolveNextChecked(option.checked);
+        // check all that starts with the event id:
+      }
     },
-    []
+    [checkboxesState]
   );
 
   const onEventClick = useCallback(
     (subscriptionItem: SubscriptionOption) => () => {
-      const previousValue = mockedReactHookFormState[subscriptionItem.key]
-        ? mockedReactHookFormState[subscriptionItem.key].checked
+      const previousValue = checkboxesState[subscriptionItem.key]
+        ? checkboxesState[subscriptionItem.key].checked
         : subscriptionItem.checked;
       const checked = resolveNextChecked(previousValue);
 
       // updated state for the event clicked:
       const nextState = {
-        ...mockedReactHookFormState,
+        ...checkboxesState,
         [subscriptionItem.key]: {
           ...subscriptionItem,
           checked
         }
       };
 
-      // Now, it needs to bubble up its category/channel status:
-      const nextCategoryChecked = checkNextCategoryStatus(
-        categories.find(
-          (c) => c.id === subscriptionItem.category.id
-        ) as Category,
+      // Now, it needs to bubble up its category status:
+      const targetCategory: Category = categories.find(
+        (c) => c.id === subscriptionItem.category.id
+      ) as Category;
+      const nextCategoryChecked = checkParentNextStatus(
+        targetCategory.events,
         subscriptionItem.channel,
         nextState
       );
@@ -62,16 +66,32 @@ export default function App() {
         checked: nextCategoryChecked
       };
 
-      updateMockedReactHookFormState(nextState);
+      // Now, it needs to bubble up its event status to the Channel:
+      const nextChannelStatus = checkParentNextStatus(
+        categories,
+        subscriptionItem.channel,
+        nextState
+      );
+      nextState[subscriptionItem.channel.id] = {
+        ...nextState[subscriptionItem.channel.id],
+        checked: nextChannelStatus
+      };
+
+      updateCheckboxesState(nextState);
     },
-    [mockedReactHookFormState]
+    [checkboxesState]
   );
 
   if (subscriptionOptions.length === 0) {
     return null;
   }
 
-  console.log(mockedReactHookFormState);
+  console.log(
+    "checkboxesState",
+    checkboxesState,
+    "options",
+    subscriptionOptions
+  );
 
   return (
     <div className="checkBoxSection">
@@ -82,7 +102,7 @@ export default function App() {
               key={channel.id}
               className="customCheckbox"
               id={channel.id}
-              checked={mockedReactHookFormState[channel.id]?.checked}
+              checked={checkboxesState[channel.id]?.checked}
               onClick={onClickGroupOption({ ...channel, type: "channel" })}
             />
             <span>{channel.name} (Channel)</span>
@@ -98,7 +118,7 @@ export default function App() {
                       <CustomCheckBox
                         className="customCheckbox"
                         id={category.id}
-                        checked={mockedReactHookFormState[key]?.checked}
+                        checked={checkboxesState[key]?.checked}
                         onClick={onClickGroupOption({
                           ...category,
                           type: "category"
@@ -126,9 +146,7 @@ export default function App() {
                               <CustomCheckBox
                                 className="customCheckbox"
                                 id={option.event.id}
-                                checked={
-                                  mockedReactHookFormState[option.key]?.checked
-                                }
+                                checked={checkboxesState[option.key]?.checked}
                                 onClick={onEventClick(option)}
                               />
                               <span>{option.event.name} (Event)</span>

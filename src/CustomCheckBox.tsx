@@ -18,7 +18,7 @@ const CustomCheckBox: FC<CustomCheckBoxProps> = ({
       <span>
         {checked === EventCheckedEnum.CHECKED && <span>✅</span>}
         {checked === EventCheckedEnum.UNCHECKED && <span>❌</span>}
-        {checked === EventCheckedEnum.UNDETERMINATED && <span>👻</span>}
+        {checked === EventCheckedEnum.UNSOLVED && <span>👻</span>}
       </span>
     </div>
   );
