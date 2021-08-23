@@ -1,0 +1,30 @@
+.App {
+  font-family: sans-serif;
+  text-align: center;
+}
+
+.verticalBox {
+  display: flex;
+  flex-direction: column;
+}
+
+.checkBoxSection {
+  margin-left: 16px;
+  display: flex;
+  flex-direction: row;
+}
+.eventCheckboxSection {
+  margin-left: 32px;
+  flex-direction: column;
+}
+
+.customCheckboxHolder {
+  border: 1px solid #cecece;
+  padding: 16px;
+  flex: 1 1 100%;
+  flex-direction: row;
+}
+
+.customCheckbox {
+  display: inline-block;
+}
