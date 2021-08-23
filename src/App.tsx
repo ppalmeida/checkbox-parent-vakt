@@ -1,15 +1,17 @@
 import "./styles.css";
 
 import CustomCheckBox from "./CustomCheckBox";
-import { channels, categories, prepareSubscriptionOptions } from "./data";
+import { channels, categories } from "./data";
 import React, { useMemo } from "react";
 import { SubscriptionOption } from "./types";
-import useCheckboxesStatuses from "./hooks/useCheckboxesStatuses";
+import useCheckboxesStatuses, {
+  prepareSubscriptionOptions
+} from "./hooks/useCheckboxesStatuses";
 
 export default function App() {
   // This could come as a prop or from a custom hook from reactQuery etc...
   const subscriptionOptions: SubscriptionOption[] = useMemo(() => {
-    return prepareSubscriptionOptions();
+    return prepareSubscriptionOptions(categories, channels);
   }, []);
 
   const {

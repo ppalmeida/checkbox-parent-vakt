@@ -1,10 +1,4 @@
-import {
-  Category,
-  Channel,
-  Event,
-  SubscriptionOption,
-  EventCheckedEnum
-} from "../types";
+import { Channel, SubscriptionOption, EventCheckedEnum } from "../types";
 
 interface Item {
   id: string;

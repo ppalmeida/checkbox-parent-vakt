@@ -1,13 +1,4 @@
-import {
-  Channel,
-  Event,
-  Category,
-  SubscriptionOption,
-  EventCheckedEnum,
-  Profile,
-  Subscription,
-  CategoryEvent
-} from "./types";
+import { Channel, Category, Profile, Subscription } from "./types";
 
 export const profile: Profile[] = [
   {
@@ -106,54 +97,3 @@ export const subscriptions: Subscription[] = [
     }
   }
 ];
-
-export function prepareSubscriptionOptions() {
-  // extract all events to a flat list:
-  const eventsCategoryInfo: Record<string, CategoryEvent> = categories.reduce(
-    (acc, category) => {
-      let temp = {
-        ...acc
-      };
-
-      temp = category.events.reduce<Record<string, CategoryEvent>>(
-        (eventsAcc, event) => {
-          return {
-            ...eventsAcc,
-            [event.id]: {
-              event,
-              category
-            }
-          };
-        },
-        temp
-      );
-
-      return temp;
-    },
-    {}
-  );
-
-  // Now, for each CategoryEvent bind, is necessary to bind it to each channel.
-  // This "bind" will produce a relationship between Event / Channel / Category: the SubscriptionOption objet
-  const subscriptionOptions = Object.values(eventsCategoryInfo).reduce<
-    SubscriptionOption[]
-  >((acc, info) => {
-    const result = [...acc];
-    //
-    channels.forEach((channel: Channel) => {
-      const subscriptionOption: SubscriptionOption = {
-        event: info.event,
-        channel,
-        key: `${channel.id}__${info.event.id}`,
-        checked: 0,
-        category: info.category
-      };
-      result.push(subscriptionOption);
-
-      return result;
-    });
-    return result;
-  }, []);
-
-  return subscriptionOptions;
-}
