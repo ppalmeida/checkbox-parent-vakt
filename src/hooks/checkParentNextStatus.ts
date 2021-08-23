@@ -4,13 +4,13 @@ interface Item {
   id: string;
 }
 
-// Calculate the status of the category when the user clicks in a event checkbox
+// Calculate the status of the parent model when the user clicks in a checkbox
 function checkParentNextStatus(
   items: Item[],
   channel: Channel,
   currentState: Record<string, SubscriptionOption>
 ): EventCheckedEnum {
-  // loop over the categories and check its events current status:
+  // loop over the items and check its children current status:
   const itemsStatuses = items.map((item: Item) => {
     const key = `${channel.id}__${item.id}`;
     return currentState[key]?.checked || EventCheckedEnum.UNCHECKED;
