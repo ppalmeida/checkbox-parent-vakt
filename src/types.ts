@@ -27,9 +27,9 @@ export interface Profile {
 // These are the "new types" created for the solution:
 // ============================================================
 export enum EventCheckedEnum {
-  UNCHECKED,
-  CHECKED,
-  UNSOLVED
+  UNCHECKED, // 0
+  CHECKED, // 1
+  UNSOLVED // 2
 }
 
 export interface Subscription {

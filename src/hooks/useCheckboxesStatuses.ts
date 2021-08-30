@@ -1,13 +1,29 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   SubscriptionOption,
   CategoryEvent,
   Category,
   Channel,
-  EventCheckedEnum
+  EventCheckedEnum,
+  Subscription
 } from "../types";
 import checkParentNextStatus from "./checkParentNextStatus";
 
+/**
+ * Check if a SubscriptionOption already have a Subscription comming from the API.
+ * Wich means this option/event should start itself as a "checked" checkbox
+ */
+function checkPreExistentSubscription(
+  info: SubscriptionOption,
+  channel: Channel,
+  subscriptions: Subscription[]
+): Subscription | undefined {
+  return subscriptions.find(
+    (s) => s.event.id === info.event?.id && s.channel.id === channel.id
+  );
+}
+
+//
 /**
  * This method "prepares" the data that comes from the API (like a list of Categories and Channels)
  * and convert them into an object that reflects the real Events to be choosen.
@@ -42,7 +58,8 @@ import checkParentNextStatus from "./checkParentNextStatus";
  */
 function prepareSubscriptionOptions(
   categories: Category[],
-  channels: Channel[]
+  channels: Channel[],
+  subscriptions: Subscription[]
 ) {
   // extract all events to a flat list:
   const eventsCategoryInfo: Record<string, CategoryEvent> = categories.reduce(
@@ -75,7 +92,6 @@ function prepareSubscriptionOptions(
     SubscriptionOption[]
   >((acc, info) => {
     const result = [...acc];
-    //
     channels.forEach((channel: Channel) => {
       const subscriptionOption: SubscriptionOption = {
         event: info.event,
@@ -85,8 +101,16 @@ function prepareSubscriptionOptions(
         category: info.category,
         type: "event"
       };
-      result.push(subscriptionOption);
+      // check for existent subscription from API:
+      subscriptionOption.checked = checkPreExistentSubscription(
+        subscriptionOption,
+        channel,
+        subscriptions
+      )
+        ? 1
+        : 0;
 
+      result.push(subscriptionOption);
       return result;
     });
     return result;
@@ -111,15 +135,65 @@ function resolveNextChecked(status: EventCheckedEnum): EventCheckedEnum {
 
 export default function useCheckboxesStatuses(
   channels: Channel[],
-  categories: Category[]
+  categories: Category[],
+  subscriptions: Subscription[]
 ) {
   const subscriptionOptions: SubscriptionOption[] = useMemo(() => {
-    return prepareSubscriptionOptions(categories, channels);
-  }, [channels, categories]);
+    return prepareSubscriptionOptions(categories, channels, subscriptions);
+  }, [channels, categories, subscriptions]);
 
   const [checkboxesState, updateCheckboxesState] = useState<
     Record<string, SubscriptionOption>
   >({});
+
+  const updateStateByNewSubscriptionOption = useCallback(
+    (
+      subscriptionItem: SubscriptionOption
+    ): Record<string, SubscriptionOption> => {
+      if (!subscriptionItem.category || !subscriptionItem.channel) {
+        throw new Error("Only Events should be used in this method");
+      }
+
+      // updated state for the event clicked:
+      const nextState = {
+        ...checkboxesState,
+        [subscriptionItem.key]: {
+          ...subscriptionItem
+        }
+      };
+
+      // Now, it needs to bubble up its category status:
+      const targetCategory: Category = categories.find(
+        (c) => c.id === subscriptionItem.category!.id
+      ) as Category;
+      const nextCategoryChecked = checkParentNextStatus(
+        targetCategory.events,
+        subscriptionItem.channel,
+        nextState
+      );
+      const categoryKey = `${subscriptionItem.channel.id}__${
+        subscriptionItem.category!.id
+      }`;
+      nextState[categoryKey] = {
+        ...nextState[categoryKey],
+        checked: nextCategoryChecked
+      };
+
+      // Now, it needs to bubble status to the Channel:
+      const nextChannelStatus = checkParentNextStatus(
+        categories,
+        subscriptionItem.channel,
+        nextState
+      );
+      nextState[subscriptionItem.channel.id] = {
+        ...nextState[subscriptionItem.channel.id],
+        checked: nextChannelStatus
+      };
+
+      return nextState;
+    },
+    [checkboxesState, categories]
+  );
 
   /**
    * Click on Checkbox that represents a "group": Category OR Channel
@@ -238,48 +312,18 @@ export default function useCheckboxesStatuses(
         : subscriptionItem.checked;
       const checked = resolveNextChecked(previousValue);
 
-      // updated state for the event clicked:
-      const nextState = {
-        ...checkboxesState,
-        [subscriptionItem.key]: {
-          ...subscriptionItem,
-          checked
-        }
-      };
-
-      // Now, it needs to bubble up its category status:
-      const targetCategory: Category = categories.find(
-        (c) => c.id === subscriptionItem.category!.id
-      ) as Category;
-      const nextCategoryChecked = checkParentNextStatus(
-        targetCategory.events,
-        subscriptionItem.channel,
-        nextState
-      );
-      const categoryKey = `${subscriptionItem.channel.id}__${subscriptionItem.category.id}`;
-      nextState[categoryKey] = {
-        ...nextState[categoryKey],
-        checked: nextCategoryChecked
-      };
-
-      // Now, it needs to bubble status to the Channel:
-      const nextChannelStatus = checkParentNextStatus(
-        categories,
-        subscriptionItem.channel,
-        nextState
-      );
-      nextState[subscriptionItem.channel.id] = {
-        ...nextState[subscriptionItem.channel.id],
-        checked: nextChannelStatus
-      };
+      const nextState = updateStateByNewSubscriptionOption({
+        ...subscriptionItem,
+        checked
+      });
 
       updateCheckboxesState(nextState);
     },
-    [checkboxesState, categories]
+    [checkboxesState, updateStateByNewSubscriptionOption]
   );
 
   const getCurrentSubscriptions = useCallback((): SubscriptionOption[] => {
-    const subscriptions = Object.values(checkboxesState).reduce<
+    const currentSubscriptionsResult = Object.values(checkboxesState).reduce<
       SubscriptionOption[]
     >((acc, info) => {
       if (info.type && info.type === "event") {
@@ -288,8 +332,25 @@ export default function useCheckboxesStatuses(
 
       return acc;
     }, []);
-    return subscriptions;
+    return currentSubscriptionsResult;
   }, [checkboxesState]);
+
+  /**
+   * In the first time this hook is mounted, run a loop over the existent subscription
+   * so the "initial state" is built
+   */
+  useEffect(() => {
+    const initialState = subscriptionOptions.reduce((acc, option) => {
+      if (option.checked) {
+        return updateStateByNewSubscriptionOption(option);
+      }
+      return acc;
+    }, {});
+
+    updateCheckboxesState(initialState);
+
+    // eslint-disable-next-line
+  }, []);
 
   return {
     checkboxesState,

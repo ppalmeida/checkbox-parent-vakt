@@ -2,7 +2,7 @@ import "./styles.css";
 
 import React, { useCallback } from "react";
 import CustomCheckBox from "./CustomCheckBox";
-import { channels, categories } from "./data";
+import { channels, categories, subscriptions } from "./data";
 import { SubscriptionOption } from "./types";
 import useCheckboxesStatuses from "./hooks/useCheckboxesStatuses";
 
@@ -13,7 +13,7 @@ export default function App() {
     onClickGroup,
     onClickEvent,
     getCurrentSubscriptions
-  } = useCheckboxesStatuses(channels, categories); // `channels` and `categories` here could come as props or useQuery, etc...
+  } = useCheckboxesStatuses(channels, categories, subscriptions); // `channels` and `categories` here could come as props or useQuery, etc...
 
   const onSaveClick = useCallback(() => {
     console.log("The final subscriptions are:", getCurrentSubscriptions());
