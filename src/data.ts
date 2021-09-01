@@ -83,17 +83,29 @@ export const subscriptions: Subscription[] = [
       id: "channel-501a28ab-0368-4988-8881-04fd8c733eae",
       name: "Web Push"
     }
+  },
+  {
+    id: "other-subscritipion-69039cdd-1e8f-4210-9a6e-a828c14b2aed",
+    profileId: null,
+    event: {
+      id: "event-v2-6233769e-cfc3-42e3-8ef1-6514d6ce3",
+      name: "Cancelled V2"
+    },
+    channel: {
+      id: "channel-501a28ab-0368-4988-8881-04fd8c733eae",
+      name: "Web Push"
+    }
+  },
+  {
+    id: "even-other-subscritipion-69039cdd-1e8f-4210-9a6e-a828c14b2aed",
+    profileId: null,
+    event: {
+      id: "event-v2-6233769e-cfc3-42e3-8ef1-6514d6ce3",
+      name: "Cancelled V2"
+    },
+    channel: {
+      id: "channel-e381b23b-6019-4da9-a9ae-0caa3d4c1eae",
+      name: "VAKT Platform"
+    }
   }
-  // {
-  //   id: "subscription-e314588d-b0c8-4cf3-8af0-e12bf1fb442f",
-  //   profileId: null,
-  //   event: {
-  //     id: "event-6233769e-cfc3-42e3-8ef1-6514d6ce3e1c",
-  //     name: "Cancelled"
-  //   },
-  //   channel: {
-  //     id: "channel-e381b23b-6019-4da9-a9ae-0caa3d4c1eae",
-  //     name: "VAKT Platform"
-  //   }
-  // }
 ];

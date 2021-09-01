@@ -148,7 +148,8 @@ export default function useCheckboxesStatuses(
 
   const updateStateByNewSubscriptionOption = useCallback(
     (
-      subscriptionItem: SubscriptionOption
+      subscriptionItem: SubscriptionOption,
+      initialStateAccumulator: Record<string, Subscription> = {}
     ): Record<string, SubscriptionOption> => {
       if (!subscriptionItem.category || !subscriptionItem.channel) {
         throw new Error("Only Events should be used in this method");
@@ -157,10 +158,11 @@ export default function useCheckboxesStatuses(
       // updated state for the event clicked:
       const nextState = {
         ...checkboxesState,
+        ...initialStateAccumulator,
         [subscriptionItem.key]: {
           ...subscriptionItem
         }
-      };
+      } as Record<string, SubscriptionOption>;
 
       // Now, it needs to bubble up its category status:
       const targetCategory: Category = categories.find(
@@ -340,9 +342,14 @@ export default function useCheckboxesStatuses(
    * so the "initial state" is built
    */
   useEffect(() => {
+    // Subscriptions is an async call
+    if (!subscriptions) {
+      return;
+    }
+
     const initialState = subscriptionOptions.reduce((acc, option) => {
       if (option.checked) {
-        return updateStateByNewSubscriptionOption(option);
+        return updateStateByNewSubscriptionOption(option, acc);
       }
       return acc;
     }, {});
@@ -350,7 +357,7 @@ export default function useCheckboxesStatuses(
     updateCheckboxesState(initialState);
 
     // eslint-disable-next-line
-  }, []);
+  }, [subscriptions]);
 
   return {
     checkboxesState,
